@@ -5,10 +5,19 @@ struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
 StaticBuffer::StaticBuffer() {
   for (int bufferIndex = 0; bufferIndex<BUFFER_CAPACITY;bufferIndex++) {
     metainfo[bufferIndex].free = true;
+    metainfo[bufferIndex].dirty=false;
+    metainfo[bufferIndex].timeStamp=-1;
+    metainfo[bufferIndex].blockNum = -1;
   }
 }
 
-StaticBuffer::~StaticBuffer() {}
+StaticBuffer::~StaticBuffer() {
+  for (int bufferIndex = 0; bufferIndex<BUFFER_CAPACITY;bufferIndex++) {
+    if(metainfo[bufferIndex].free == false && metainfo[bufferIndex].dirty==true){
+      Disk::writeBlock(StaticBuffer:: blocks[bufferIndex],metainfo[bufferIndex].blockNum);
+    }
+  }
+}
 
 int StaticBuffer::getFreeBuffer(int blockNum) {
   if (blockNum < 0 || blockNum > DISK_BLOCKS) {
