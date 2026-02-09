@@ -54,29 +54,31 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum) {
 }
 
 int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
+  unsigned char *bufferptr;
+
+  int ret=this->loadBlockAndGetBufferPtr(&bufferptr);
+  if(ret!=SUCCESS){
+    return ret;
+  }
   struct HeadInfo head;
+  int numattrs=head.numAttrs;
+  int numslots=head.numSlots;
 
-  int ret = this->getHeader(&head);
-  if (ret != SUCCESS) return ret;
+  if(slotNum<0 || slotNum>=numslots){
+    return E_OUTOFBOUND;
+  }
 
-  int attrCount = head.numAttrs;
-  int slotCount = head.numSlots;
+  int recordSize  = numattrs * ATTR_SIZE;
+  int slotMapSize = numslots;
 
-  unsigned char *bufferPtr = nullptr;
-  ret = loadBlockAndGetBufferPtr(&bufferPtr);
-  if (ret != SUCCESS) return ret;
-
-  int recordSize  = attrCount * ATTR_SIZE;
-  int slotMapSize = slotCount;
-
-  unsigned char *slotPointer =
-      bufferPtr + HEADER_SIZE + slotMapSize + (recordSize * slotNum);
+  unsigned char *slotPointer = bufferptr + HEADER_SIZE + slotMapSize + (recordSize * slotNum);
 
   memcpy(slotPointer, rec, recordSize);
 
-
-  // write updated block back to disk
-  Disk::writeBlock(bufferPtr, this->blockNum);
+  ret=StaticBuffer::setDirtyBit(this->blockNum);
+  if(ret!=SUCCESS){
+    return ret;
+  }
 
   return SUCCESS;
 }
