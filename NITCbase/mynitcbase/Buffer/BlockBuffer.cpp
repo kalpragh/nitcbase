@@ -86,20 +86,26 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr) {
   // check whether the block is already present in the buffer
   int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
-  if (bufferNum == E_BLOCKNOTINBUFFER) {
-    // get a free buffer slot (may evict using LRU internally)
-    bufferNum = StaticBuffer::getFreeBuffer(this->blockNum);
-
-    if (bufferNum == E_OUTOFBOUND) {
+  if (bufferNum!= E_BLOCKNOTINBUFFER) {
+    // set the timestamp of the corresponding buffer to 0 and increment the
+        // timestamps of all other occupied buffers in BufferMetaInfo.
+        for(int bufferindex=0;bufferindex<BUFFER_CAPACITY;bufferindex++){
+          if(bufferindex==bufferNum){
+            StaticBuffer::metainfo[bufferindex].timeStamp=0;
+          }
+          else{
+            StaticBuffer::metainfo[bufferindex].timeStamp++;
+          }
+        }
+  }
+  else{
+    bufferNum=StaticBuffer::getFreeBuffer(this->blockNum);
+    if(bufferNum==E_OUTOFBOUND){
       return E_OUTOFBOUND;
     }
-
-    // load block from disk into the chosen buffer slot
-    Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
+    Disk::readBlock(StaticBuffer::blocks[bufferNum],this->blockNum);
   }
-
-  // return pointer to the in-memory buffer block
-  *buffPtr = StaticBuffer::blocks[bufferNum];
+  *buffPtr = StaticBuffer :: blocks[bufferNum];
   return SUCCESS;
 }
 /* used to get the slotmap from a record block
