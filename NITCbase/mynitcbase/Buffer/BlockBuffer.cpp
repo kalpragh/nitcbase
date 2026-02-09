@@ -61,6 +61,7 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum) {
     return ret;
   }
   struct HeadInfo head;
+  this->getHeader(&head);
   int numattrs=head.numAttrs;
   int numslots=head.numSlots;
 
