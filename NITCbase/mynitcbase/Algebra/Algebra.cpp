@@ -85,7 +85,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
         AttrCacheTable::getAttrCatEntry(srcRelId, i, &a);
 
         if (a.attrType == NUMBER) {
-            printf(" %.2lf |", record[i].nVal);
+            printf(" %.0lf |", record[i].nVal);
         } else { // STRING
             printf(" %s |", record[i].sVal);
         }
