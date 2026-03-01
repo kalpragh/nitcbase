@@ -1,5 +1,5 @@
 #include "BlockBuffer.h"
-
+#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 
@@ -34,7 +34,6 @@ int BlockBuffer :: getHeader(struct HeadInfo *head) {
 
     return SUCCESS;
 }
-
 /*
     Used to get the record at slot 'slotNum' into the array 'rec'
     NOTE: this function expects the caller to allocate memory for 'rec'
@@ -198,3 +197,116 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum){
 
     return SUCCESS;
 }
+
+int BlockBuffer::setHeader(struct HeadInfo *head){
+
+    unsigned char *bufferPtr;
+    // get the starting address of the buffer containing the block using
+    int ret=loadBlockAndGetBufferPtr(&bufferPtr);
+    if(ret!=SUCCESS)return ret;
+
+    // if loadBlockAndGetBufferPtr(&bufferPtr) != SUCCESS
+        // return the value returned by the call.
+
+    // cast bufferPtr to type HeadInfo*
+    struct HeadInfo *bufferHeader = (struct HeadInfo *)bufferPtr;
+
+    bufferHeader->blockType=head->blockType;
+    bufferHeader->lblock=head->lblock;
+    bufferHeader->numAttrs=head->numAttrs;
+    bufferHeader->numEntries=head->numEntries;
+    bufferHeader->numSlots=head->numSlots;
+    bufferHeader->pblock=head->pblock;
+    bufferHeader->rblock=head->rblock;
+    // copy the fields of the HeadInfo pointed to by head (except reserved) to
+    // the header of the block (pointed to by bufferHeader)
+    //(hint: bufferHeader->numSlots = head->numSlots )
+
+    ret=StaticBuffer::setDirtyBit(this->blockNum);
+    if(ret!=SUCCESS)return ret;
+    // update dirty bit by calling StaticBuffer::setDirtyBit()
+    // if setDirtyBit() failed, return the error code
+
+    return SUCCESS;
+}
+
+int BlockBuffer::setBlockType(int blockType){
+
+    unsigned char *bufferPtr;
+    int ret=loadBlockAndGetBufferPtr(&bufferPtr);
+    if(ret!=SUCCESS)return ret;
+
+    // if loadBlockAndGetBufferPtr(&bufferPtr) != SUCCESS
+        // return the value returned by the call.
+
+    // store the input block type in the first 4 bytes of the buffer.
+    // (hint: cast bufferPtr to int32_t* and then assign it)
+      *((int32_t *)bufferPtr) = blockType;
+
+    // update the StaticBuffer::blockAllocMap entry corresponding to the
+    // object's block number to `blockType`.
+    StaticBuffer::blockAllocMap[this->blockNum] = (unsigned char)blockType;
+    ret= StaticBuffer::setDirtyBit(this->blockNum);
+    if(ret!=SUCCESS)return ret;
+    return SUCCESS;
+}
+
+int BlockBuffer::getFreeBlock(int blockType){
+
+    // iterate through the StaticBuffer::blockAllocMap and find the block number
+    // of a free block in the disk.
+    int freeblock=-1;
+    for(int i=0;i<DISK_BLOCKS;i++){
+        if(StaticBuffer::blockAllocMap[i]==UNUSED_BLK){
+            freeblock=i;
+            break;
+        }
+    }
+    // if no block is free, return E_DISKFULL.
+
+    if(freeblock==-1){
+        return E_DISKFULL;
+    }
+    this->blockNum=freeblock;
+    // set the object's blockNum to the block number of the free block.
+
+    // find a free buffer using StaticBuffer::getFreeBuffer() .
+    int buffernum=StaticBuffer::getFreeBuffer(freeblock);
+    if(buffernum<0)return buffernum;
+    struct HeadInfo head={};
+    head.pblock=-1;
+    head.lblock=-1;
+    head.rblock=-1;
+    head.numEntries=0;
+    head.numAttrs=0;
+    head.numSlots=0;
+    int ret=this->setHeader(&head);
+    if(ret!=SUCCESS)return ret;
+
+    ret=this->setBlockType(blockType);
+    if(ret!=SUCCESS)return ret;
+    return freeblock;
+    // initialize the header of the block passing a struct HeadInfo with values
+    // pblock: -1, lblock: -1, rblock: -1, numEntries: 0, numAttrs: 0, numSlots: 0
+    // to the setHeader() function.
+
+    // update the block type of the block to the input block type using setBlockType().
+
+    // return block number of the free block.
+}
+BlockBuffer::BlockBuffer(char blockType){ //constructor 1
+    int intblocktype;
+    if(blockType=='R'){
+        intblocktype=REC;
+    }
+    else if(blockType=='I'){
+        intblocktype=IND_INTERNAL;
+    }else{
+
+        intblocktype=IND_LEAF;
+    }
+    int ret = this->getFreeBlock(intblocktype);
+    this->blockNum = ret;
+}
+RecBuffer::RecBuffer() : BlockBuffer('R'){}
+// call parent non-default constructor with 'R' denoting record block.
