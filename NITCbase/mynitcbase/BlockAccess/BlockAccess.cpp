@@ -379,7 +379,6 @@ int BlockAccess::insert(int relId, Attribute *record){
         RelCatEntry relCatEntry;
         RelCacheTable::getRelCatEntry(relId, &relCatEntry);
         relCatEntry.lastBlk = rec_id.block;
-        RelCacheTable::setRelCatEntry(relId, &relCatEntry); // is it neccessary because we are setting it up again at the end of this function.
         RelCacheTable::setRelCatEntry(relId, &relCatEntry);
     }
 
