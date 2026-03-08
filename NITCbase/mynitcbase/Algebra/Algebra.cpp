@@ -23,11 +23,11 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
   int ret = AttrCacheTable::getAttrCatEntry(srcRelId, attr, &attrCatEntry);
   if (ret == E_ATTRNOTEXIST) return E_ATTRNOTEXIST;
-  if (ret != SUCCESS) return ret;
 
   /*** Convert strVal (string) to an attribute of data type NUMBER or STRING ***/
-  int type = attrCatEntry.attrType;
   Attribute attrVal;
+  int type = attrCatEntry.attrType;
+
   if (type == NUMBER) {
     if (isNumber(strVal)) {       // the isNumber() function is implemented below
       attrVal.nVal = atof(strVal);
@@ -36,72 +36,89 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     }
   } else if (type == STRING) {
     strcpy(attrVal.sVal, strVal);
-  } else {
-      return E_ATTRTYPEMISMATCH;
-  }
+  } 
 
   /*** Selecting records from the source relation ***/
-
-  // Before calling the search function, reset the search to start from the first hit
-  // using RelCacheTable::resetSearchIndex()
-  ret = RelCacheTable::resetSearchIndex(srcRelId);
-  if (ret != SUCCESS) return ret;
-
   RelCatEntry relCatEntry;
-  // get relCatEntry using RelCacheTable::getRelCatEntry()
-  ret = RelCacheTable::getRelCatEntry(srcRelId, &relCatEntry);
-  if (ret != SUCCESS) return ret;
-  /************************
-  The following code prints the contents of a relation directly to the output
-  console. Direct console output is not permitted by the actual the NITCbase
-  specification and the output can only be inserted into a new relation. We will
-  be modifying it in the later stages to match the specification.
-  ************************/
+  RelCacheTable::getRelCatEntry(srcRelId,&relCatEntry);
+  int src_nAttrs=relCatEntry.numAttrs;
+  
+    /* let attr_names[src_nAttrs][ATTR_SIZE] be a 2D array of type char
+        (will store the attribute names of rel). */
+    // let attr_types[src_nAttrs] be an array of type int
 
-  printf("|");
-  for (int i = 0; i < relCatEntry.numAttrs; ++i) {
-    AttrCatEntry attrCatEntry;
-    // get attrCatEntry at offset i using AttrCacheTable::getAttrCatEntry()
-    ret = AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntry);
-    if(ret!=SUCCESS)return ret;
-    printf(" %s |", attrCatEntry.attrName);
-  }
-  printf("\n");
+  char attr_names[src_nAttrs][ATTR_SIZE];
+  int attr_types[src_nAttrs];
 
-  while (true) {
-    RecId searchRes = BlockAccess::linearSearch(srcRelId, attr, attrVal, op);
+    /*iterate through 0 to src_nAttrs-1 :
+        get the i'th attribute's AttrCatEntry using AttrCacheTable::getAttrCatEntry()
+        fill the attr_names, attr_types arrays that we declared with the entries
+        of corresponding attributes
+    */
+  for(int i=0;i<src_nAttrs;i++){
+    AttrCatEntry srcattrcatentry;
+    AttrCacheTable::getAttrCatEntry(srcRelId,i,&srcattrcatentry);
 
-    if (searchRes.block != -1 && searchRes.slot != -1) {
-        RecBuffer recBlock(searchRes.block);
+    strcpy(attr_names[i],srcattrcatentry.attrName);
+    attr_types[i]=srcattrcatentry.attrType;
 
-        Attribute record[relCatEntry.numAttrs];
-        recBlock.getRecord(record, searchRes.slot);
+  } 
+   /* Create the relation for target relation by calling Schema::createRel()
+       by providing appropriate arguments */
+    // if the createRel returns an error code, then return that value.
 
-         // print the attribute values in the same format as above
-        printf("|");
-        for (int i = 0; i < relCatEntry.numAttrs; i++) {
-        AttrCatEntry a;
-        // get attrCatEntry at offset i using AttrCacheTable::getAttrCatEntry()
-        AttrCacheTable::getAttrCatEntry(srcRelId, i, &a);
-
-        if (a.attrType == NUMBER) {
-            printf(" %.0lf |", record[i].nVal);
-        } else { // STRING
-            printf(" %s |", record[i].sVal);
-        }
-        }
-        printf("\n");
-
-    } else {
-
-      // (all records over)
-      break;
+    int retval=Schema::createRel(targetRel,src_nAttrs,attr_names,attr_types);
+    if(retval!=SUCCESS){
+      return retval;
     }
-  }
+    /* Open the newly created target relation by calling OpenRelTable::openRel()
+       method and store the target relid */
+    /* If opening fails, delete the target relation by calling Schema::deleteRel()
+       and return the error value returned from openRel() */
+    int targetrelid=OpenRelTable::getRelId(targetRel);
+    if(targetrelid<0){
+      Schema::deleteRel(targetRel);
+      return targetrelid;
+    }
+    /*** Selecting and inserting records into the target relation ***/
+    /* Before calling the search function, reset the search to start from the
+       first using RelCacheTable::resetSearchIndex() */
 
-  return SUCCESS;
+    Attribute record[src_nAttrs];
+    /*
+        The BlockAccess::search() function can either do a linearSearch or
+        a B+ tree search. Hence, reset the search index of the relation in the
+        relation cache using RelCacheTable::resetSearchIndex().
+        Also, reset the search index in the attribute cache for the select
+        condition attribute with name given by the argument `attr`. Use
+        AttrCacheTable::resetSearchIndex().
+        Both these calls are necessary to ensure that search begins from the
+        first record.
+    */
+    RelCacheTable::resetSearchIndex(srcRelId);
+    //AttrCacheTable::resetSearchIndex(srcRelId,attr); do i hv to hv this
+
+    // read every record that satisfies the condition by repeatedly calling
+    // BlockAccess::search() until there are no more records to be read
+
+    while ( BlockAccess::search(srcRelId,record,attr,attrVal,op)==SUCCESS) {
+
+        ret = BlockAccess::insert(targetrelid, record);
+
+        if (ret!=SUCCESS) {
+        //     close the targetrel(by calling 
+        Schema::closeRel(targetRel);
+        //     delete targetrel (by calling 
+        Schema::deleteRel(targetRel);
+        return ret;
+        }
+    }
+
+    // Close the targetRel by calling 
+    Schema::closeRel(targetRel);
+
+    return SUCCESS;
 }
-
 
 // will return if a string can be parsed as a floating point number
 bool isNumber(char *str) {
