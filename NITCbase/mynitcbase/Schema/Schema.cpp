@@ -64,7 +64,7 @@ int Schema::renameAttr(char relName[ATTR_SIZE], char oldAttrName[ATTR_SIZE], cha
     int retVal = BlockAccess::renameAttribute(relName, oldAttrName, newAttrName);
     return retVal;
 }
-int createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int attrtype[]){
+int Schema::createRel(char relName[],int nAttrs, char attrs[][ATTR_SIZE],int attrtype[]){
 
     Attribute relNameAsAttribute;
     strcpy(relNameAsAttribute.sVal,relName);
