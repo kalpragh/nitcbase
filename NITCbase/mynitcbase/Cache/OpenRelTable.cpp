@@ -159,6 +159,23 @@ OpenRelTable::~OpenRelTable() {
     }
 
 }
+int OpenRelTable::getFreeOpenRelTableEntry() {
+  for(int i=0;i<MAX_OPEN;i++){
+    if(tableMetaInfo[i].free){
+      return i;
+    }
+  }
+  return E_CACHEFULL;
+}
+//OpenRelTable::getRelId()//OpenRelTable::getRelId()
+int OpenRelTable::getRelId(char relName[ATTR_SIZE]) {int OpenRelTable::getRelId(char relName[ATTR_SIZE]) {
+  for(int i=0;i<MAX_OPEN;i++){
+    if(!tableMetaInfo[i].free && strcmp(tableMetaInfo[i].relName,relName)==0){
+      return i;
+    }
+  }
+  return E_RELNOTOPEN;
+}
 
 //OpenRelTable::openRel()
 int OpenRelTable::openRel(char relName[ATTR_SIZE]) {
