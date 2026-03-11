@@ -11,6 +11,99 @@ the arguments of the function are
 - op - the operator of the condition
 - strVal - the value that we want to compare against (represented as a string)
 */
+//select for stage 8
+int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr[ATTR_SIZE], int op, char strVal[ATTR_SIZE]) {
+  int srcRelId = OpenRelTable::getRelId(srcRel);      // we'll implement this later
+  if (srcRelId == E_RELNOTOPEN) {
+    return E_RELNOTOPEN;
+  }
+
+  AttrCatEntry attrCatEntry;
+  // get the attribute catalog entry for attr, using AttrCacheTable::getAttrcatEntry()
+  //    return E_ATTRNOTEXIST if it returns the error
+
+  int ret = AttrCacheTable::getAttrCatEntry(srcRelId, attr, &attrCatEntry);
+  if (ret == E_ATTRNOTEXIST) return E_ATTRNOTEXIST;
+  if (ret != SUCCESS) return ret;
+
+  /*** Convert strVal (string) to an attribute of data type NUMBER or STRING ***/
+  int type = attrCatEntry.attrType;
+  Attribute attrVal;
+  if (type == NUMBER) {
+    if (isNumber(strVal)) {       // the isNumber() function is implemented below
+      attrVal.nVal = atof(strVal);
+    } else {
+      return E_ATTRTYPEMISMATCH;
+    }
+  } else if (type == STRING) {
+    strcpy(attrVal.sVal, strVal);
+  } else {
+      return E_ATTRTYPEMISMATCH;
+  }
+
+  /*** Selecting records from the source relation ***/
+
+  // Before calling the search function, reset the search to start from the first hit
+  // using RelCacheTable::resetSearchIndex()
+  ret = RelCacheTable::resetSearchIndex(srcRelId);
+  if (ret != SUCCESS) return ret;
+
+  RelCatEntry relCatEntry;
+  // get relCatEntry using RelCacheTable::getRelCatEntry()
+  ret = RelCacheTable::getRelCatEntry(srcRelId, &relCatEntry);
+  if (ret != SUCCESS) return ret;
+  /************************
+  The following code prints the contents of a relation directly to the output
+  console. Direct console output is not permitted by the actual the NITCbase
+  specification and the output can only be inserted into a new relation. We will
+  be modifying it in the later stages to match the specification.
+  ************************/
+
+  printf("|");
+  for (int i = 0; i < relCatEntry.numAttrs; ++i) {
+    AttrCatEntry attrCatEntry;
+    // get attrCatEntry at offset i using AttrCacheTable::getAttrCatEntry()
+    ret = AttrCacheTable::getAttrCatEntry(srcRelId, i, &attrCatEntry);
+    if(ret!=SUCCESS)return ret;
+    printf(" %s |", attrCatEntry.attrName);
+  }
+  printf("\n");
+
+  while (true) {
+    RecId searchRes = BlockAccess::linearSearch(srcRelId, attr, attrVal, op);
+
+    if (searchRes.block != -1 && searchRes.slot != -1) {
+        RecBuffer recBlock(searchRes.block);
+
+        Attribute record[relCatEntry.numAttrs];
+        recBlock.getRecord(record, searchRes.slot);
+
+         // print the attribute values in the same format as above
+        printf("|");
+        for (int i = 0; i < relCatEntry.numAttrs; i++) {
+        AttrCatEntry a;
+        // get attrCatEntry at offset i using AttrCacheTable::getAttrCatEntry()
+        AttrCacheTable::getAttrCatEntry(srcRelId, i, &a);
+
+        if (a.attrType == NUMBER) {
+            printf(" %.0lf |", record[i].nVal);
+        } else { // STRING
+            printf(" %s |", record[i].sVal);
+        }
+        }
+        printf("\n");
+
+    } else {
+
+      // (all records over)
+      break;
+    }
+  }
+
+  return SUCCESS;
+}
+
+//select for stage 9
 int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr[ATTR_SIZE], int op, char strVal[ATTR_SIZE]) {
   int srcRelId = OpenRelTable::getRelId(srcRel);      // we'll implement this later
   if (srcRelId == E_RELNOTOPEN) {
