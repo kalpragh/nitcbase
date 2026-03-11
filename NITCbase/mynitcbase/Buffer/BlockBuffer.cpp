@@ -2,7 +2,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
-
+#include <cstdio>
 
 // BlockBuffer(int blockNum)
 BlockBuffer :: BlockBuffer(int blockNum){

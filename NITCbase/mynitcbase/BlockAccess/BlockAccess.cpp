@@ -1,5 +1,5 @@
 #include "BlockAccess.h"
-
+#include<cstdio>
 #include <cstring>
 
 
@@ -492,13 +492,15 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
     //     release the block using BlockBuffer.releaseBlock
     //
     //     Hint: to know if we reached the end, check if nextBlock = -1
-
     int currblock=firstblock;
     while(currblock!=-1){
         struct HeadInfo head;
         RecBuffer currRecbuffer(currblock);
         currRecbuffer.getHeader(&head);
-        currblock=head.rblock;
+        int blockToDelete = currblock;   // save current block number
+        currblock = head.rblock;         // move to next before deleting current
+
+        //printf("block %d\n", blockToDelete); viva question- print the block number
         currRecbuffer.releaseBlock();
     }
     /***
@@ -606,6 +608,7 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE]) {
             //  every block of the attribute catalog gets released.)
 
             attrcatbuffer.releaseBlock();
+
         }
 
         // (the following part is only relevant once indexing has been implemented)
