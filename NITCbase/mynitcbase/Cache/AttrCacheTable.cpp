@@ -43,3 +43,45 @@ void AttrCacheTable::recordToAttrCatEntry(union Attribute record[ATTRCAT_NO_ATTR
   attrCatEntry->rootBlock=(int)record[ATTRCAT_ROOT_BLOCK_INDEX].nVal;
   attrCatEntry->offset=(int)record[ATTRCAT_OFFSET_INDEX].nVal;
 }
+
+int AttrCacheTable::getSearchIndex(int relId, char attrName[ATTR_SIZE], IndexId *searchIndex) {
+
+  if(relId<0 || relId>=MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+
+  if(attrCache[relId]==nullptr) {
+    return E_RELNOTOPEN;
+  }
+
+  for(AttrCacheEntry *entry=attrCache[relId];entry!=nullptr;entry=entry->next)
+  {
+    if (strcmp(attrName,entry->attrCatEntry.attrName)==0){
+      *searchIndex=entry->searchIndex;
+      return SUCCESS;
+    }
+  }
+
+  return E_ATTRNOTEXIST;
+}
+int AttrCacheTable::getSearchIndex(int relId,int attrOffset, IndexId *searchIndex) {
+
+  if(relId<0 ||relId>=MAX_OPEN) {
+    return E_OUTOFBOUND;
+  }
+
+  if(attrCache[relId]==nullptr) {
+    return E_RELNOTOPEN;
+  }
+
+  for(AttrCacheEntry *entry=attrCache[relId];entry!=nullptr;entry=entry->next)
+  {
+    if (entry->attrCatEntry.offset==attrOffset)
+    {
+        *searchIndex = entry->searchIndex;
+        return SUCCESS;
+    }
+  }
+
+  return E_ATTRNOTEXIST;
+}
