@@ -133,17 +133,11 @@ int AttrCacheTable::setSearchIndex(int relId, int attrOffset, IndexId *searchInd
   return E_ATTRNOTEXIST;
 }
 int AttrCacheTable::resetSearchIndex(int relId, char attrName[ATTR_SIZE]) {
-
   IndexId searchindex={-1,-1};
-  return AttrCacheTable::setSearchIndex(relId,attrName,searchindex);
-  // declare an IndexId having value {-1, -1}
-  // set the search index to {-1, -1} using AttrCacheTable::setSearchIndex
-  // return the value returned by setSearchIndex
+  return AttrCacheTable::setSearchIndex(relId,attrName,&searchindex);
 }
 
 int AttrCacheTable::resetSearchIndex(int relId,int attrOffset) {
-
-  // declare an IndexId having value {-1, -1}
-  // set the search index to {-1, -1} using AttrCacheTable::setSearchIndex
-  // return the value returned by setSearchIndex
+  IndexId searchindex={-1,-1};
+  return AttrCacheTable::setSearchIndex(relId,attrOffset,&searchindex);
 }
