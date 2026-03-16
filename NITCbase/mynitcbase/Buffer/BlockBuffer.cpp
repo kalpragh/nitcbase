@@ -367,3 +367,53 @@ void BlockBuffer::releaseBlock(){
     // set the object's blockNum to INVALID_BLOCK (-1)
     
 }
+// constr 1
+IndBuffer::IndBuffer(char blockType) : BlockBuffer(blockType){}
+
+// constructor2
+IndBuffer::IndBuffer(int blockNum) : BlockBuffer(blockNum){}
+
+//constructor 1
+IndInternal::IndInternal() : IndBuffer('I'){}
+
+//constructor 2
+IndInternal::IndInternal(int blockNum) : IndBuffer(blockNum){}
+
+//constructor 1
+IndLeaf::IndLeaf() : IndBuffer('L'){} 
+
+//constructor 2
+IndLeaf::IndLeaf(int blockNum) : IndBuffer(blockNum){}
+
+int IndInternal::getEntry(void *ptr, int indexNum) {
+    if(indexNum<0 || indexNum>=MAX_KEYS_INTERNAL)return E_OUTOFBOUND;
+    unsigned char *bufferPtr;
+    int ret=loadBlockAndGetBufferPtr(&bufferPtr);
+    if(ret!=SUCCESS)return ret;
+    // typecast the void pointer to an internal entry pointer
+    struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+    memcpy(&(internalEntry->lChild), entryPtr, sizeof(int32_t));
+    memcpy(&(internalEntry->attrVal), entryPtr + 4, sizeof(Attribute));
+    memcpy(&(internalEntry->rChild), entryPtr + 20, 4);
+
+    return SUCCESS;
+}
+int IndLeaf::getEntry(void *ptr, int indexNum) {
+    if(indexNum<0 || indexNum>=MAX_KEYS_LEAF)return E_OUTOFBOUND;
+    unsigned char *bufferPtr;
+    int ret=loadBlockAndGetBufferPtr(&bufferPtr);
+    if(ret!=SUCCESS)return ret;
+    
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+    memcpy((struct Index *)ptr, entryPtr, LEAF_ENTRY_SIZE);
+
+    return SUCCESS;
+}
+int IndInternal::setEntry(void *ptr, int indexNum) {
+  return 0;
+}
+
+int IndLeaf::setEntry(void *ptr, int indexNum) {
+  return 0;
+}
