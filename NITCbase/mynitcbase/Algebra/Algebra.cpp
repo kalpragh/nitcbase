@@ -2,6 +2,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+extern int comparisoncount;
 bool isNumber(char *str);
 /* used to select all the records that satisfy a condition.
 the arguments of the function are
@@ -134,6 +135,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
   /*** Selecting records from the source relation ***/
   RelCatEntry relCatEntry;
   RelCacheTable::getRelCatEntry(srcRelId,&relCatEntry);
+  comparisoncount=0;
   int src_nAttrs=relCatEntry.numAttrs;
   
     /* let attr_names[src_nAttrs][ATTR_SIZE] be a 2D array of type char
@@ -209,7 +211,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
     // Close the targetRel by calling 
     Schema::closeRel(targetRel);
-
+    printf("number of comparisons: %d\n", comparisoncount);
     return SUCCESS;
 }
 
