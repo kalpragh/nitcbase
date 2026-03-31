@@ -101,7 +101,7 @@ RecId BPlusTree::bPlusSearch(int relId, char attrName[ATTR_SIZE], Attribute attr
                 internalBlk.getEntry(&intEntry,i);
                 comparisoncount++;
                 int compareval=compareAttrs(intEntry.attrVal,attrVal,attrCatEntry.attrType);
-                if((compareval >= 0 && (op == EQ || op == GE)) || (compareval > 0 || op == GT)){
+                if((compareval >= 0 && (op == EQ || op == GE)) || (compareval > 0 || op == GT)){//for 2nd half does it hv to be (compareval > 0 && op == GT)
                     found=true;
                     break;
                 }
