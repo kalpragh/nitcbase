@@ -5,7 +5,8 @@
 #include "../define/constants.h"
 #include "../define/id.h"
 
-typedef struct RelCatEntry {
+typedef struct RelCatEntry
+{
   char relName[ATTR_SIZE];
   int numAttrs;
   int numRecs;
@@ -15,7 +16,8 @@ typedef struct RelCatEntry {
 
 } RelCatEntry;
 
-typedef struct RelCacheEntry {
+typedef struct RelCacheEntry
+{
   RelCatEntry relCatEntry;
   bool dirty;
   RecId recId;
@@ -23,10 +25,11 @@ typedef struct RelCacheEntry {
 
 } RelCacheEntry;
 
-class RelCacheTable {
+class RelCacheTable
+{
   friend class OpenRelTable;
 
- public:
+public:
   // methods
   static int getRelCatEntry(int relId, RelCatEntry *relCatBuf);
   static int setRelCatEntry(int relId, RelCatEntry *relCatBuf);
@@ -34,7 +37,7 @@ class RelCacheTable {
   static int setSearchIndex(int relId, RecId *searchIndex);
   static int resetSearchIndex(int relId);
 
- private:
+private:
   // field
   static RelCacheEntry *relCache[MAX_OPEN];
 
@@ -42,4 +45,4 @@ class RelCacheTable {
   static void recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS], RelCatEntry *relCatEntry);
   static void relCatEntryToRecord(RelCatEntry *relCatEntry, union Attribute record[RELCAT_NO_ATTRS]);
 };
-#endif  // NITCBASE_RELCACHETABLE_H
+#endif // NITCBASE_RELCACHETABLE_H

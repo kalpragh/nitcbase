@@ -8,8 +8,9 @@
 #include "../define/constants.h"
 #include "../define/id.h"
 
-class BlockAccess {
- public:
+class BlockAccess
+{
+public:
   static int search(int relId, Attribute *record, char *attrName, Attribute attrVal, int op);
 
   static int insert(int relId, union Attribute *record);
@@ -25,4 +26,4 @@ class BlockAccess {
   static int project(int relId, Attribute *record);
 };
 
-#endif  // NITCBASE_BLOCKACCESS_H
+#endif // NITCBASE_BLOCKACCESS_H

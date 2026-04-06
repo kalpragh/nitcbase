@@ -34,10 +34,11 @@
 
 #define REGEX(c) std::regex(c, std::regex_constants::icase)
 
-class RegexHandler {
-  typedef int (RegexHandler::*handlerFunction)(void);  // function pointer type
+class RegexHandler
+{
+  typedef int (RegexHandler::*handlerFunction)(void); // function pointer type
 
- private:
+private:
   // command to handler mappings
   const std::vector<std::pair<std::regex, handlerFunction>> handlers = {
       {REGEX(HELP_CMD), &RegexHandler::helpHandler},
@@ -67,7 +68,7 @@ class RegexHandler {
   std::vector<std::string> extractTokens(std::string input);
 
   // handler functions
-  std::smatch m;  // to store matches while parsing the regex
+  std::smatch m; // to store matches while parsing the regex
   int helpHandler();
   int exitHandler();
   int echoHandler();
@@ -90,8 +91,8 @@ class RegexHandler {
   int selectAttrFromJoinHandler();
   int customFunctionHandler();
 
- public:
+public:
   int handle(const std::string command);
 };
 
-#endif  // REGEX_HANDLER_H
+#endif // REGEX_HANDLER_H

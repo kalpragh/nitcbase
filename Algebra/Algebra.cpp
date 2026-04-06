@@ -502,9 +502,66 @@ int Algebra::project(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], int tar_
       // delete targetrel by calling
       Schema::deleteRel(targetRel);
       return ret;
+<<<<<<< HEAD
+=======
     }
   }
 
+  // Close the targetRel by calling
+  Schema::closeRel(targetRel);
+
+  return SUCCESS;
+}
+int Algebra::join(char srcRelation1[ATTR_SIZE], char srcRelation2[ATTR_SIZE], char targetRelation[ATTR_SIZE], char attribute1[ATTR_SIZE], char attribute2[ATTR_SIZE])
+{
+
+  // get relation1's and relation2's relId
+  int relId1 = OpenRelTable::getRelId(srcRelation1);
+  int relId2 = OpenRelTable::getRelId(srcRelation2);
+
+  if (relId1 < 0 || relId1 >= MAX_OPEN || relId2 < 0 || relId2 >= MAX_OPEN)
+  {
+    return E_RELNOTOPEN;
+  }
+
+  // get attribute catalog entries for the source relations corresponding to their give attributes.
+  AttrCatEntry attrCatEntry1, attrCatEntry2;
+  if (AttrCacheTable::getAttrCatEntry(relId1, attribute1, &attrCatEntry1) == E_ATTRNOTEXIST)
+  {
+    return E_ATTRNOTEXIST;
+  }
+  if (AttrCacheTable::getAttrCatEntry(relId2, attribute2, &attrCatEntry2) == E_ATTRNOTEXIST)
+  {
+    return E_ATTRNOTEXIST;
+  }
+
+  // if attribute1 and attribute2 are of different types, return error
+  if (attrCatEntry1.attrType != attrCatEntry2.attrType)
+  {
+    return E_ATTRTYPEMISMATCH;
+  }
+
+  /*
+      iterate through all the attributes in both the source relation and check if there are
+      any other pair of attributes other than join attributes
+
+      if yes, then return error
+  */
+  RelCatEntry relCatEntry1, relCatEntry2;
+  RelCacheTable::getRelCatEntry(relId1, &relCatEntry1);
+  RelCacheTable::getRelCatEntry(relId2, &relCatEntry2);
+
+  AttrCatEntry temp1, temp2;
+  for (int j = 0; j < relCatEntry2.numAttrs; j++)
+  {
+    if (j == attrCatEntry2.offset)
+    {
+      continue;
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
+    }
+  }
+
+<<<<<<< HEAD
   // Close the targetRel by calling
   Schema::closeRel(targetRel);
 
@@ -607,11 +664,61 @@ int Algebra::join(char srcRelation1[ATTR_SIZE], char srcRelation2[ATTR_SIZE], ch
   for (int i = 0; i < numOfAttributes1; i++)
   {
     AttrCacheTable::getAttrCatEntry(srcrel1id, i, &temp1);
+=======
+    AttrCacheTable::getAttrCatEntry(relId2, j, &temp2);
+
+    for (int i = 0; i < relCatEntry1.numAttrs; i++)
+    {
+      AttrCacheTable::getAttrCatEntry(relId1, i, &temp1);
+
+      if (strcmp(temp2.attrName, temp1.attrName) == 0)
+      {
+
+        return E_DUPLICATEATTR;
+      }
+    }
+  }
+
+  int numOfAttributes1 = relCatEntry1.numAttrs;
+  int numOfAttributes2 = relCatEntry2.numAttrs;
+
+  /*
+      If srcRelation2 doesn't have an index on attribute2, create index
+
+      This will reduce time complexity from O(m.n) -> O(mlogn + n)
+      where m = no. of records in relation_1, n = no. of records in relation_2
+  */
+  if (attrCatEntry2.rootBlock == -1)
+  {
+    int ret = BPlusTree::bPlusCreate(relId2, attribute2);
+    if (ret != SUCCESS)
+    {
+      return E_DISKFULL;
+    }
+    // refresh attrCatEntry2 after index creation
+    AttrCacheTable::getAttrCatEntry(relId2, attribute2, &attrCatEntry2);
+  }
+
+  int numOfAttributesInTarget = numOfAttributes1 + numOfAttributes2 - 1;
+
+  // declaring the following arrays to store the details of the target relation
+  char targetRelAttrNames[numOfAttributesInTarget][ATTR_SIZE];
+  int targetRelAttrTypes[numOfAttributesInTarget];
+
+  /*
+      Iterate through all the attributes in both the source relations and update
+      targetRelAttrNames[], targetRelAttrTypes[] arrays excluding attribute2
+  */
+  for (int i = 0; i < numOfAttributes1; i++)
+  {
+    AttrCacheTable::getAttrCatEntry(relId1, i, &temp1);
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
     strcpy(targetRelAttrNames[i], temp1.attrName);
     targetRelAttrTypes[i] = temp1.attrType;
   }
   for (int j = 0; j < attrCatEntry2.offset; j++)
   {
+<<<<<<< HEAD
     AttrCacheTable::getAttrCatEntry(srcrel2id, j, &temp2);
     strcpy(targetRelAttrNames[numOfAttributes1 + j], temp2.attrName);
     targetRelAttrTypes[numOfAttributes1 + j] = temp2.attrType;
@@ -624,11 +731,26 @@ int Algebra::join(char srcRelation1[ATTR_SIZE], char srcRelation2[ATTR_SIZE], ch
     targetRelAttrTypes[numOfAttributes1 + j - 1] = temp2.attrType;
   }
   // create the target relation using the
+=======
+    AttrCacheTable::getAttrCatEntry(relId2, j, &temp2);
+    strcpy(targetRelAttrNames[numOfAttributes1 + j], temp2.attrName);
+    targetRelAttrTypes[numOfAttributes1 + j] = temp2.attrType;
+  }
+  for (int j = attrCatEntry2.offset + 1; j < numOfAttributes2; j++)
+  {
+    AttrCacheTable::getAttrCatEntry(relId2, j, &temp2);
+    strcpy(targetRelAttrNames[numOfAttributes1 + j - 1], temp2.attrName);
+    targetRelAttrTypes[numOfAttributes1 + j - 1] = temp2.attrType;
+  }
+
+  // create the target relation
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
   int ret = Schema::createRel(targetRelation, numOfAttributesInTarget, targetRelAttrNames, targetRelAttrTypes);
   if (ret != SUCCESS)
   {
     return ret;
   }
+<<<<<<< HEAD
   // if createRel() returns an error, return that error
 
   // Open the targetRelation using
@@ -637,12 +759,23 @@ int Algebra::join(char srcRelation1[ATTR_SIZE], char srcRelation2[ATTR_SIZE], ch
   {
     Schema::deleteRel(targetRelation);
     return targetrelid;
+=======
+
+  // open and get targetRelation id
+  int targetRelId = OpenRelTable::openRel(targetRelation);
+  if (targetRelId < 0 || targetRelId >= MAX_OPEN)
+  {
+    // delete the relation
+    Schema::deleteRel(targetRelation);
+    return targetRelId;
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
   }
 
   Attribute record1[numOfAttributes1];
   Attribute record2[numOfAttributes2];
   Attribute targetRecord[numOfAttributesInTarget];
 
+<<<<<<< HEAD
   // this loop is to get every record of the srcRelation1 one by one
   while (BlockAccess::project(srcrel1id, record1) == SUCCESS)
   {
@@ -662,6 +795,30 @@ int Algebra::join(char srcRelation1[ATTR_SIZE], char srcRelation2[ATTR_SIZE], ch
 
       // copy srcRelation1's and srcRelation2's attribute values(except
       // for attribute2 in rel2) from record1 and record2 to targetRecord
+=======
+  RelCacheTable::resetSearchIndex(relId1);
+
+  // outer while loop to get all the records from srcRelation1 one by one
+  while (BlockAccess::project(relId1, record1) == SUCCESS)
+  {
+
+    // reset search index for srcRelation2, cause for every record in srcRelation1, we start from beginning
+    RelCacheTable::resetSearchIndex(relId2);
+
+    // reset search index for attribute2, cause we want record with whose attribute2 matches with attribute1
+    AttrCacheTable::resetSearchIndex(relId2, attribute2);
+
+    /*
+        inner loop will get every record of srcRelation2 which satisfy the following condition:
+        record1.attribute1 = record2.attribute2
+    */
+    while (BlockAccess::search(relId2, record2, attribute2, record1[attrCatEntry1.offset], EQ) == SUCCESS)
+    {
+      /*
+          copy srcRelation1's anf srcRelation2's attribute values (except for attribute2 in rel2) from record1
+          and record2 to targetRecord
+      */
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
       for (int i = 0; i < numOfAttributes1; i++)
       {
         targetRecord[i] = record1[i];
@@ -674,15 +831,29 @@ int Algebra::join(char srcRelation1[ATTR_SIZE], char srcRelation2[ATTR_SIZE], ch
       {
         targetRecord[numOfAttributes1 + i - 1] = record2[i];
       }
+<<<<<<< HEAD
       ret = BlockAccess::insert(targetrelid, targetRecord);
       if (ret != SUCCESS)
       {
         OpenRelTable::closeRel(targetrelid);
+=======
+
+      // insert the currnt record into the target relation
+      ret = BlockAccess::insert(targetRelId, targetRecord);
+      if (ret != SUCCESS)
+      {
+        OpenRelTable::closeRel(targetRelId);
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
         Schema::deleteRel(targetRelation);
         return E_DISKFULL;
       }
     }
   }
+<<<<<<< HEAD
   OpenRelTable::closeRel(targetrelid);
+=======
+
+  OpenRelTable::closeRel(targetRelId);
+>>>>>>> 26fdab6 (stage 12 final NITCBASE DONEE)
   return SUCCESS;
 }

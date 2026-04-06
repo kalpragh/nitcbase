@@ -5,15 +5,17 @@
 typedef int relId;
 
 /* A record is identified by its block number and slot number */
-struct RecId {
+struct RecId
+{
   int block;
   int slot;
 };
 
 /* An index is identified by its block number and index number */
-struct IndexId {
+struct IndexId
+{
   int block;
   int index;
 };
 
-#endif  // NITCBASE_ID_H
+#endif // NITCBASE_ID_H

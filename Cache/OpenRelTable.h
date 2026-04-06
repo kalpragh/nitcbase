@@ -7,14 +7,16 @@
 #include "AttrCacheTable.h"
 #include "RelCacheTable.h"
 
-typedef struct OpenRelTableMetaInfo {
+typedef struct OpenRelTableMetaInfo
+{
   bool free;
   char relName[ATTR_SIZE];
 
 } OpenRelTableMetaInfo;
 
-class OpenRelTable {
- public:
+class OpenRelTable
+{
+public:
   // methods
   OpenRelTable();
   ~OpenRelTable();
@@ -22,7 +24,7 @@ class OpenRelTable {
   static int openRel(char relName[ATTR_SIZE]);
   static int closeRel(int relId);
 
- private:
+private:
   // field
   static OpenRelTableMetaInfo tableMetaInfo[MAX_OPEN];
 
@@ -30,4 +32,4 @@ class OpenRelTable {
   static int getFreeOpenRelTableEntry();
 };
 
-#endif  // NITCBASE_OPENRELTABLE_H
+#endif // NITCBASE_OPENRELTABLE_H

@@ -5,8 +5,9 @@
 #include "../Cache/OpenRelTable.h"
 #include "../define/constants.h"
 
-class Schema {
- public:
+class Schema
+{
+public:
   static int createRel(char relName[], int numOfAttributes, char attrNames[][ATTR_SIZE], int attrType[]);
   static int deleteRel(char relName[ATTR_SIZE]);
   static int createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]);
@@ -17,4 +18,4 @@ class Schema {
   static int closeRel(char relName[ATTR_SIZE]);
 };
 
-#endif  // NITCBASE_SCHEMA_H
+#endif // NITCBASE_SCHEMA_H

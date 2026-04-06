@@ -7,8 +7,9 @@
 #include "../define/constants.h"
 #include "../define/id.h"
 
-class BPlusTree {
- private:
+class BPlusTree
+{
+private:
   static int findLeafToInsert(int rootBlock, Attribute attrVal, int attrType);
   static int insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum, Index entry);
   static int splitLeaf(int leafBlockNum, Index indices[]);
@@ -16,11 +17,11 @@ class BPlusTree {
   static int splitInternal(int intBlockNum, InternalEntry internalEntries[]);
   static int createNewRoot(int relId, char attrName[ATTR_SIZE], Attribute attrVal, int lChild, int rChild);
 
- public:
+public:
   static int bPlusCreate(int relId, char attrName[ATTR_SIZE]);
   static int bPlusInsert(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, RecId recordId);
   static RecId bPlusSearch(int relId, char attrName[ATTR_SIZE], union Attribute attrVal, int op);
   static int bPlusDestroy(int rootBlockNum);
 };
 
-#endif  // NITCBASE_BPLUSTREE_H
+#endif // NITCBASE_BPLUSTREE_H

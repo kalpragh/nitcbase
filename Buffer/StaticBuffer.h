@@ -4,17 +4,19 @@
 #include "../Disk_Class/Disk.h"
 #include "../define/constants.h"
 
-struct BufferMetaInfo {
+struct BufferMetaInfo
+{
   bool free;
   bool dirty;
   int blockNum;
   int timeStamp;
 };
 
-class StaticBuffer {
+class StaticBuffer
+{
   friend class BlockBuffer;
 
- private:
+private:
   // fields
   static unsigned char blocks[BUFFER_CAPACITY][BLOCK_SIZE];
   static struct BufferMetaInfo metainfo[BUFFER_CAPACITY];
@@ -24,7 +26,7 @@ class StaticBuffer {
   static int getFreeBuffer(int blockNum);
   static int getBufferNum(int blockNum);
 
- public:
+public:
   // methods
   static int getStaticBlockType(int blockNum);
   static int setDirtyBit(int blockNum);
@@ -32,4 +34,4 @@ class StaticBuffer {
   ~StaticBuffer();
 };
 
-#endif  // NITCBASE_STATICBUFFER_H
+#endif // NITCBASE_STATICBUFFER_H
